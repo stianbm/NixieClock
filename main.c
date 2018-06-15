@@ -33,13 +33,14 @@ unsigned int hours = 0;							// Counter for hours
 unsigned int minutes = 0;						// Counter for minutes
 unsigned int[] digits = {0, 0, 0, 0};			// Digits four hours and minutes
 
-unsigned int[] tubes = {0b0001,
-	0b0010,
-	0b0100,
-	0b1000};									// Pin numbers of tubes/transistors
+unsigned int[] tubes = {0b11110001,
+	0b11110010,
+	0b11110100,
+	0b11111000};								// Pin numbers of tubes/transistors - right to left / minutes to hours
 
 bool buttonPressed = false;						// Flag for initial button press
-unsigned long int buttonSeconds = 0;			// Counter to 
+unsigned long int buttonSeconds = 0;			// Counter to keep track when button was pressed - used for initializing timeSetLoop
+bool setTimeMode = false;						// Flag to indicate if time is being set by user
 
 
 /* Calls the initializer and starts the update loop
@@ -71,11 +72,39 @@ void initializeGeneral(){
 void updateLoop(){
 	secondsToTime();
 	while(true){
-		for(unsigned int i = 0: i<4: i++){
-			// Set tube chooser pin tubes[i]
-			tubeRegister = (1<<tubes[i]);
-			// Set tube pin digits[i]
-			pinRegister = (1<<digits[i]);
+		// Display digits
+		writeToTubes();
+		
+		// Check if setTimeLoop should be entered
+		if(buttonPressed && seconds == buttonSeconds){
+			setTimeMode = true;
+			setTimeLoop();
+		}
+	}
+}
+
+
+/* Writes the digits to the tubes once per tube
+ */
+void writeToTubes(){
+	for(unsigned int i = 0: i<4: i++){
+		// Set tube chooser pin tubes[i]
+		PORTC &= tubes[i];
+		// Set tube pin digits[i]
+		if(digits[i] < 8){
+			PORTA = (1<<digits[i]);
+		}
+		else{
+			switch(digits[i]){
+				case: 9{
+					PORTB &= 0b10111111;
+					break;
+				}
+				case: 8{
+					PORTB &= 0b01111111;
+					break;
+				}
+			}
 		}
 	}
 }
@@ -91,7 +120,7 @@ void incrementTime(){
 		seconds++;
 	}
 	// Toggle the neon tubes
-	tubes ^= 0b0001;
+	PORTC ^= 0b100000
 }
 
 
@@ -192,9 +221,9 @@ PB5		PWM (analog)
 PB6		Digit 9
 PB7		Digit 8
 
-PC0		TubeChoser 2
-PC1		TubeChoser 3
-PC2		TubeChoser 4
-PC3
+PC0		TubeChoser 1
+PC1		TubeChoser 2
+PC2		TubeChoser 3
+PC3		TubeChoser 4
 PC4
 PC5		Colon
