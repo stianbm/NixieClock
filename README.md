@@ -1,2 +1,2 @@
 # NixieClock
-The clock function of a Nixie clock using Atmel's ttiny817
+The clock function of a Nixie clock using Atmel's attiny817
