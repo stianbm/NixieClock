@@ -14,7 +14,7 @@
 
 // Global constant
 static unsigned int LED = 0b00010000;
-static unsigned int button = 0b00100000;
+static unsigned int TOSC1Pin = 0b00001000;
 
 // Function declaration
 void initializeLED();
@@ -25,12 +25,10 @@ void initializeCrystal();
 int main(void)
 {
 	initializeLED();
+	initializeCrystal();
+	sei();
     while (1) 
     {
-		if(!(PORTB.IN & button)){
-			toggleLED();
-			_delay_ms(500); //Waits for 500ms
-		}
     }
 }
 
@@ -49,11 +47,25 @@ void initializeLED(){
 void initializeCrystal(){
 	// Configure desired oscillator
 	CLKCTRL.XOSC32KCTRLA |= 0b00110110;
-	CLKCTRL.XOSC32KCTRLA |= 0b00110000;		// Start-up time of 64k cycles, select external source type as external crystal
-	CLKCTRL.XOSC32KCTRLA |= 0b00000010;		// Start the crystal 
+	CLKCTRL.XOSC32KCTRLA |= 0b00110000;		// Start-up time of 64k cycles (longest), select external source type as external crystal
+	CLKCTRL.XOSC32KCTRLA |= 0b00000010;		// Runstdby - start the crystal
+	CLKCTRL.XOSC32KCTRLA |= 0b00000001;		// Enable the oscillator
 	// Write the clock select bits
-	
-	// TODO fix dis
-	CLKCTRL.XOSC32KCTRLA &= 0b11111100;		// Set pin 1 and 0 to 00
-	CLKCTRL.XOSC32KCTRLA |= 0b00000010;		// Set pin 1 and 0 to 10 - 32.768 kHz from XOSC32K or external clock from TOSC1
+	RTC.CLKSEL |= 0b00000010;				// Set pin 1 and 0 to 10 - 32.768 kHz from XOSC32K or external clock from TOSC1
+	// Enable interrupt in peripheral
+	RTC.PITINTCTRL |= 0B00000001;
+	// Select period
+	RTC.PITCTRLA |= 0b01111000;
+	// Enable PIT
+	RTC.PITCTRLA |= 0b00000001;
 }
+
+
+ISR(PORTB_PORT_vect){
+	
+}
+
+
+/* TODO:
+ * Check the Busy bits in the RTC.STATUS and RTC.PITSTATUS registers, also on initial configuration
+ * Create interrupt handler
