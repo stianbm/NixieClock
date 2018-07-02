@@ -11,6 +11,8 @@
 #include <avr/io.h>
 #define F_CPU 3333333UL     //The internal clock is 20Mhz, but it can't run that fast with 3,3V so it is prescaled by a factor of 6 to 3333333
 #include <util/delay.h>     //Delay Library
+#include <avr/interrupt.h>  //Atmel's own interrupt library
+
 
 // Global constant
 static unsigned int LED = 0b00010000;
@@ -46,9 +48,9 @@ void initializeLED(){
 
 void initializeCrystal(){
 	// Configure desired oscillator
-	CLKCTRL.XOSC32KCTRLA |= 0b00110110;
+	//CLKCTRL.XOSC32KCTRLA |= 0b00110110;
 	CLKCTRL.XOSC32KCTRLA |= 0b00110000;		// Start-up time of 64k cycles (longest), select external source type as external crystal
-	CLKCTRL.XOSC32KCTRLA |= 0b00000010;		// Runstdby - start the crystal
+	//CLKCTRL.XOSC32KCTRLA |= 0b00000010;		// Runstdby - start the crystal
 	CLKCTRL.XOSC32KCTRLA |= 0b00000001;		// Enable the oscillator
 	// Write the clock select bits
 	RTC.CLKSEL |= 0b00000010;				// Set pin 1 and 0 to 10 - 32.768 kHz from XOSC32K or external clock from TOSC1
@@ -61,11 +63,11 @@ void initializeCrystal(){
 }
 
 
-ISR(PORTB_PORT_vect){
-	
+ISR(RTC_PIT_vect){
+	toggleLED();
 }
 
 
 /* TODO:
  * Check the Busy bits in the RTC.STATUS and RTC.PITSTATUS registers, also on initial configuration
- * Create interrupt handler
+ */
