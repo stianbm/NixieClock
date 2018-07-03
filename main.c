@@ -203,7 +203,7 @@ void setTimeLoop(){
 GND
 VDD
 
-PA0		Digit 0
+PA0		Reserved
 PA1		Digit 1
 PA2		Digit 2
 PA3		Digit 3
@@ -212,12 +212,12 @@ PA5		Digit 5
 PA6		Digit 6
 PA7		Digit 7
 
-PB0		TubeChoser 1
-PB1		Button (analog - can be digital, right?)
+PB0		Digit 0
+PB1		Button Mode
 PB2		CRT
 PB3		CRT
-PB4		PWM (analog)
-PB5		PWM (analog)
+PB4		PWM
+PB5		ADC
 PB6		Digit 9
 PB7		Digit 8
 
@@ -225,5 +225,5 @@ PC0		TubeChoser 1
 PC1		TubeChoser 2
 PC2		TubeChoser 3
 PC3		TubeChoser 4
-PC4
+PC4		Button Value
 PC5		Colon
