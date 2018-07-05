@@ -32,6 +32,12 @@ int main(void)
 	toggleLED();
     while (1) 
     {
+		/*
+		if(RTC_PITSTATUS){
+			toggleLED();
+			_delay_ms(500);
+		}
+		*/
     }
 }
 
@@ -87,14 +93,19 @@ void initializeCrystal(){
 	// Set crystal as clock source for RTC
 	RTC_CLKSEL = RTC_CLKSEL_TOSC32K_gc;
 	
-	// Enable PIT in RTC
-	RTC_INTCTRL = RTC_PITEN_bm;
-	RTC_PITCTRLA = RTC_PITEN_bm;
+	// Set the PIT periode to 32,768 cycles (1Hz) and enable PIT in RTC
+	RTC_PITCTRLA |= 0b01110000 | RTC_PITEN_bm;
+	
+	// Enable PIT
+	RTC_PITINTCTRL |= 0x01;
+	
 }
 
 ISR(RTC_PIT_vect){
 	toggleLED();
+	RTC_PITINTFLAGS |= 0xFF;
 }
+/*
 
 ISR(PORTA_PORT_vect){
 	toggleLED();
@@ -108,6 +119,14 @@ ISR(PORTC_PORT_vect){
 	toggleLED();
 }
 
+ISR(RTC_CNT_vect){
+	toggleLED();
+}
+
+ISR(PIT_vect){
+	toggleLED();
+}
+*/
 
 /* TODO:
  * Check the Busy bits in the RTC.STATUS and RTC.PITSTATUS registers, also on initial configuration
