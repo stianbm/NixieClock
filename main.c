@@ -16,7 +16,7 @@
 
 // Global constant
 static unsigned int LED = 0b00010000;
-static unsigned int TOSC1Pin = 0b00001000;
+// static unsigned int TOSC1Pin = 0b00001000;
 
 // Function declaration
 void initializeLED();
@@ -29,6 +29,7 @@ int main(void)
 	initializeLED();
 	initializeCrystal();
 	sei();
+	toggleLED();
     while (1) 
     {
     }
@@ -45,7 +46,7 @@ void initializeLED(){
 	PORTB.OUT |= LED;	// Set 1 as default value (off)
 }
 
-
+/*
 void initializeCrystal(){
 	// Configure desired oscillator
 	//CLKCTRL.XOSC32KCTRLA |= 0b00110110;
@@ -61,9 +62,49 @@ void initializeCrystal(){
 	// Enable PIT
 	RTC.PITCTRLA |= 0b00000001;
 }
+*/
 
+void initializeCrystal(){
+	// Deactivate change protection for register and start XOSC32K
+	// Start-up time is set to the maximum 64K cycles (~2 seconds)
+	_PROTECTED_WRITE(CLKCTRL_XOSC32KCTRLA, CLKCTRL_ENABLE_bm | CLKCTRL_RUNSTDBY_bm | CLKCTRL_CSUT_64K_gc);
+	
+	/*
+	// Use event system channel 3 as path for RTC PIT DIV64 event
+	EVSYS_ASYNCCH3 = EVSYS_ASYNCCH3_PIT_DIV64_gc;
+
+	// Connect channel 3 to async user 8 (evout0)
+	EVSYS_ASYNCUSER8 = EVSYS_ASYNCUSER8_ASYNCCH3_gc;
+
+	// muxout evout0 to PA2
+	PORTMUX_CTRLA = PORTMUX_EVOUT0_bm;
+	*/
+	
+	// The RTC_STATUS needs to be 0 before writing to the RTC (could be used for start-up time).
+	while (RTC.STATUS != 0) {
+	}
+	
+	// Set crystal as clock source for RTC
+	RTC_CLKSEL = RTC_CLKSEL_TOSC32K_gc;
+	
+	// Enable PIT in RTC
+	RTC_INTCTRL = RTC_PITEN_bm;
+	RTC_PITCTRLA = RTC_PITEN_bm;
+}
 
 ISR(RTC_PIT_vect){
+	toggleLED();
+}
+
+ISR(PORTA_PORT_vect){
+	toggleLED();
+}
+
+ISR(PORTB_PORT_vect){
+	toggleLED();
+}
+
+ISR(PORTC_PORT_vect){
 	toggleLED();
 }
 
