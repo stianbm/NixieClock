@@ -5,16 +5,16 @@
  * Author : stianbm
  *
  * The Nixie clock is supposed to show four digits, two for hours and two for minutes.
- * It also has to small Neon tubes to work as a colon, separating hours from minutes.
- * One button is used for setting the time, press and hold to enter the mode, hour digits
+ * It also has two small Neon tubes to work as a colon, separating hours from minutes.
+ * Two buttons are used for setting the time, press one to enter the mode, hour digits
  * blink, minutes don't.
- * Press to increase hours, wraps around after 23.
- * Press and hold to set minutes, minute digits blink.
- * Press to increase minutes, wrap around after	59.
- * Press and hold to return to normal operation.
+ * Press other to increase hours, wraps around after 23.
+ * Press first to set minutes, minute digits blink.
+ * Press other to increase minutes, wrap around after	59.
+ * Press first to return to normal operation.
  * Colon should toggle each second.
  * 
- * BASED ON THE WORK OF JoergenSteen @github!!!
+ * Based on the work of JoergenSteen @github and Atmel's START projects
  */ 
 
 #include <avr/io.h>								// A part of all AVR-programming for convenient programming
