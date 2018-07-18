@@ -34,19 +34,25 @@ static uint8_t tubes[4] = {0b00000001,
 	0b00000100,
 	0b00001000};
 
-// 8b variable where digit 0 and 1 are mode flags and digit 2 and 3 are "active tubes" flags
-static uint8_t modeFlags = 0b00000000;
+// 8b variable where digit 0 and 1 are mode flags
+static uint8_t modeFlags = 0x00;
 
 // Mode flag masks
-static uint8_t hourModeFlag = 0b00000010;
-static uint8_t minuteModeFlag = 0b00000010;
+static uint8_t hourModeFlag = 0x01;
+static uint8_t minuteModeFlag = 0x02;
+
+// Start and stop for tubes to be selected in for loop
+uint8_t tubesStart = 0;		// Set to 2 to not show minutes
+uint8_t tubesStop = 4;		// Set to 2 to not show hours
 
 // Pin masks:
 // Port B
-uint8_t zero = 0b00000001;
-uint8_t eight = 0b10000000;
+uint8_t zero = 0b00000000;
+uint8_t modeButton = 0b00000001;
 uint8_t nine = 0b01000000;
+uint8_t eight = 0b10000000;
 // Port C
+uint8_t valueButton = 0b00010000;
 uint8_t colon = 0b00100000;
 
 #endif /* CONSTANTSANDVARIABLES_H_ */

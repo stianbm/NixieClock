@@ -20,6 +20,8 @@
  *
  * Press first to return to normal operation.
  *
+ * Don't count seconds while setting time
+ *
  * Colon should toggle each second.
  *
  * Keep track of time in three variables: seconds, minutes and hours.
@@ -37,9 +39,11 @@
 
 void initializeCrystalAndPIT(){
 	// Deactivate change protection for register and start XOSC32K
-	// Start-up time is set to the maximum 64K cycles (~2 seconds)
+	// Start-up time is set to the maximum 64K cycles
 	// Use the macro "_PROTECTED_WRITE()"
 	_PROTECTED_WRITE(CLKCTRL_XOSC32KCTRLA, CLKCTRL_ENABLE_bm | CLKCTRL_RUNSTDBY_bm | CLKCTRL_CSUT_64K_gc);
+	// Set PIT as level 1 priority interrupt
+	CPUINT.LVL1VEC = RTC_PIT_vect_num;
 	// The RTC_STATUS needs to be 0 before writing to the RTC (could be used for start-up time).
 	while (RTC.STATUS != 0) {}
 	// Set crystal as clock source for RTC
@@ -58,6 +62,10 @@ void initializeGeneral(){
 	PORTB.DIR = 0b11000001;
 	PORTC.DIR = 0b00101111;
 	
+	// Initialize buttons
+	PORTB.PIN1CTRL |= PORT_ISC_FALLING_gc;		// falling edge, this is preferred when the button is pulled up
+	PORTC.PIN4CTRL |= PORT_ISC_FALLING_gc;
+	
 	/*
 
 	Not used for buttons not on devboard?
@@ -74,7 +82,7 @@ void initializeGeneral(){
 
 // Writes the digits to the tubes once per tube - might have to add delay later
 void writeToTubes(){
-	for(uint8_t i = 0; i<4; i++){
+	for(uint8_t i = tubesStart; i<tubesStop; i++){
 		// Clear and set tube chooser pin tubes[i]
 		PORTC.OUT &= clearTubeSelect;
 		PORTC.OUT |= tubes[i];
@@ -125,7 +133,7 @@ void minutesToDigits(){
 	digits[0] = minutesTemp;
 }
 
-// Updates the digits
+// Updates the digits - to be run after altering values of counters
 void updateDigits(){
 	hoursToDigits();
 	minutesToDigits();
@@ -134,7 +142,6 @@ void updateDigits(){
 // Convert the second counter to hours and minutes, then to digits and then display them
 void updateLoop(){
 	while(1){
-		updateDigits();
 		writeToTubes();
 	}
 }
@@ -182,16 +189,74 @@ void setTimeLoop(){
 	}
 }
 
-// Interrupt handler for PIT, either increments seconds or toggle, depending on modeFlags
+void toggleMinutes(){
+	if(tubesStart == 0){
+		tubesStart = 2;
+	}
+	else if(tubesStart == 2){
+		tubesStart = 0;
+	}
+}
+
+void toggleHours(){
+	if(tubesStop == 4){
+		tubesStop = 2;
+	}
+	else if(tubesStop == 2){
+		tubesStop = 4;
+	}
+}
+
+// Interrupt handler for PIT, either increments seconds or toggle digits, depending on modeFlags
 ISR(RTC_PIT_vect){
 	if(!modeFlags){
 		incrementSeconds();
+		updateDigits();
 	}
 	else{
-		blinkDigits();
+		if(modeFlags == minuteModeFlag){
+			toggleMinutes();
+		}
+		else if(modeFlags == hourModeFlag){
+			toggleHours();
+		}
 	}
 	// Reset interrupt flag
 	RTC_PITINTFLAGS |= 0xFF;
+}
+
+// Interrupt handler for mode button
+ISR(PORTB_PORT_vect){
+	if(!(PORTB.IN & modeButton)){
+		switch(modeFlags){
+			case 0x00:
+				modeFlags = hourModeFlag;
+				break;
+			case 0x01:
+				modeFlags = minuteModeFlag;
+				tubesStop = 4;		// Make sure hours are shown again if they're toggled off at the time
+				break;
+			case 0x02:
+				modeFlags = 0x00;
+				tubesStart = 0;
+				break;
+		}
+	}
+}
+
+// Interrupt handler for value button
+ISR(PORTC_PORT_vect){
+	if(!(PORTC.IN & valueButton)){
+		switch(modeFlags){
+			case 0x01:
+				incrementHours();
+				break;
+			case 0x02:
+				incrementMinutes();
+				break;
+		}
+		updateDigits();
+	}
 }
 
 // Calls the initializer and starts the update loop
@@ -203,9 +268,9 @@ int main(void){
 
 /* TODO:
  *
- * Make a loop for setting time - solve how to toggle hour tubes and minute tubes
- * Implement interrupt handlers for buttons
- * Give priority to PIT
+ * Implement interrupt handlers for buttons - might have to use delay
+ * Make a loop for setting time
+ * Give priority to PIT - might be implemented
  */
 
 /* Pins and functions:
